@@ -18,6 +18,7 @@
 
 #' @return A list with three items: AlignmentMatix - A dataframe with peak areas for all metabolites matched in sufficient number of samples. MetaboliteInfo - An info file with RT, spectra, and metabolite ID info for each metabolite in the AlignmentMatrix. UnmatchedQuantMasses- Info on metabolites combined that had different unique masses (if quantMethod="U") or greater than 50% different apexing masses (if quantMethod="A")
 #' @import parallel
+#' @import stats
 #' @export
 #' @examples
 #' ConsensusAlign(c(system.file("extdata", "SampleA.txt", package="R2DGC"),
@@ -38,7 +39,6 @@ ConsensusAlign<-function(inputFileList,
                          missingPeakFinderSimilarityLax=0.85,
                          quantMethod="T",
                          standardLibrary=NULL){
-  require(parallel)
 
   AlignmentTableList<-list()
   for(seed in seedFile){
@@ -430,7 +430,7 @@ ConsensusAlign<-function(inputFileList,
   #If multiple seed files provided find peaks with >50% overlap across all seed files
   if(length(seedFile)>1){
 
-    #
+    #Find all peaks with at >50% alignment overlap
     ConsensusPeaks<-list()
     ConsensusMatches<-list()
     for(i in 1:(length(AlignmentTableList)-1)){
@@ -440,19 +440,23 @@ ConsensusAlign<-function(inputFileList,
       ConsensusPeaks[[i]]<-Indexes[,1]
       ConsensusMatches[[i]]<-Indexes
     }
-
     ConsensusPeaks<-Reduce(intersect, ConsensusPeaks)
 
+    #Filter all alignments to consensus peaks (>50% overlap)
     AlignmentTableListFilt<-AlignmentTableList
     for(i in 1:(length(AlignmentTableList)-1)){
       AlignmentTableListFilt[[i]]<-AlignmentTableListFilt[[i]][ConsensusMatches[[i]][as.character(ConsensusPeaks),2],inputFileList]
     }
     AlignmentTableListFilt[[length(AlignmentTableListFilt)]]<-AlignmentTableListFilt[[length(AlignmentTableListFilt)]][ConsensusPeaks,inputFileList]
 
+    #Find median value of peak areas across all alignments
     AlignVector<-data.frame(lapply(AlignmentTableListFilt, as.vector))
-    FinalMatrix<-matrix(apply(AlignVector,1,function(x) median(x, na.rm=T)), nrow = length(ConsensusPeaks))
+    FinalMatrix<-matrix(apply(AlignVector,1,function(x) stats::median(x, na.rm=T)), nrow = length(ConsensusPeaks))
     colnames(FinalMatrix)<-inputFileList
     row.names(FinalMatrix)<- row.names(AlignmentTableListFilt[[length(AlignmentTableListFilt)]])
+
+    #Filter metabolite info file by consensus peaks
+    seedRawFile<-seedRawFile[ConsensusPeaks,]
   }
   #Add metabolite IDs if standardLibrary is used
   if(!is.null(standardLibrary)){

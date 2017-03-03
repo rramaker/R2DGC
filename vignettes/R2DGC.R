@@ -119,6 +119,10 @@ StandardLibrary<-MakeReference(inputFileList = c(Standard1, Standard2), RT1_Stan
 ## ------------------------------------------------------------------------
 str(StandardLibrary, nchar.max=20)
 
+## ------------------------------------------------------------------------
+data("StandardLibrary_030117")
+str(StandardLibrary_030117, nchar.max=10)
+
 ## ---- echo=FALSE, fig.width=5, fig.height=5------------------------------
 plot.new()
 points(c(.1,.35,.5,.8),rep(0.8,4), pch=16, col=c("black","red","black","black"))

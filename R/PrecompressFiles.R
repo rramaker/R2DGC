@@ -10,6 +10,7 @@
 #' @param outputFiles A boolean indicating if putative peak combinations should be outputted. Will be present at the same path as the input file with _Processed.txt appended to the end.
 
 #' @import parallel
+#' @import utils
 #' @export
 #' @return Returns a data frame with peaks recommended to be combined. If outputFiles is TRUE, peaks returned will be combined and new sample files will be written to the original directory with "_Processed.txt" added to the file name.
 #' @examples
@@ -197,7 +198,7 @@ PrecompressFiles<-function(inputFileList, RT1Penalty=1, RT2Penalty=10,similarity
   #If outputFiles==TRUE, write processed files out to the input file directory
   if(outputFiles==TRUE){
     for(File in inputFileList){
-      write.table(processedFileList[[File]], paste0(substr(File,1,nchar(File)-4),"_Processed.txt"),sep="\t",quote=F,row.names=F)
+      utils::write.table(processedFileList[[File]], paste0(substr(File,1,nchar(File)-4),"_Processed.txt"),sep="\t",quote=F,row.names=F)
     }
   }
   return(combinedFrame)

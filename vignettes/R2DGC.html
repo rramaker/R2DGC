@@ -139,7 +139,8 @@ $(document).ready(function () {
 </ul></li>
 <li><a href="#generating-a-metabolite-standard-library-with-makereference"><span class="toc-section-number">2.5</span> Generating a metabolite standard library with <strong>MakeReference</strong></a><ul>
 <li><a href="#makereference-overview"><span class="toc-section-number">2.5.1</span> <strong>MakeReference</strong> overview</a></li>
-<li><a href="#computing-and-using-retention-time-indexes"><span class="toc-section-number">2.5.2</span> Computing and using retention time indexes</a></li>
+<li><a href="#finding-the-pre-formatted-standard-library-that-comes-with-the-package"><span class="toc-section-number">2.5.2</span> Finding the pre-formatted standard library that comes with the package</a></li>
+<li><a href="#computing-and-using-retention-time-indexes"><span class="toc-section-number">2.5.3</span> Computing and using retention time indexes</a></li>
 </ul></li>
 <li><a href="#multi-sample-alignment-and-metabolite-identification-with-consensusalign"><span class="toc-section-number">2.6</span> Multi-sample alignment and metabolite identification with <strong>ConsensusAlign</strong></a><ul>
 <li><a href="#consensusalign-overview"><span class="toc-section-number">2.6.1</span> <strong>ConsensusAlign</strong> overview</a></li>
@@ -495,8 +496,30 @@ StandardLibrary&lt;-MakeReference(inputFileList = c(Standard1, Standard2), RT1_S
 ##  $ FAME_24_RT1: num  -1.012 -0.787</code></pre>
 <p>Notice the output was a data frame with two rows reprenting the two metabolite standards we ran the function on. The first three columns are the original peak name, retention time, and spectra columns from the input files. The following columns represent the two retention times followed by the first retention time relative to each FAME standard to allow for retention time indexing while performing alignments with the <strong>ConsensusAlign</strong> function (see section 2.5.2 below for more details). Though recommended, retention time standards are not required for alignment or standard library construction. If retention time standards are not desired the user should just submit a metabolite standard Chromatof file formatted identically to the examples above except with only one row describing the metabolite standard of interest.</p>
 </div>
+<div id="finding-the-pre-formatted-standard-library-that-comes-with-the-package" class="section level3">
+<h3><span class="header-section-number">2.5.2</span> Finding the pre-formatted standard library that comes with the package</h3>
+<p>We have provided a pre-formatted standard library with ~300 peaks with rentention indices calculated with 9 FAME standards (C:8, C:10, C:12, C:14, C:16, C:18, C:20, C:22, C:24). We’ve used the naming convention described above (Section 2.2), FAME_[number of carbons]. Any user can use this library regardless of whether they have FAME standards spiked into their samples if the perform a retention time standard free alignment (see section 2.6 below). Users who have spiked these FAME standards into their samples and named the FAME peaks according to the convention described. If only a subset of the FAME standards have been used, this library can still be used if the columns corresponding to the missing FAME peaks are deleted from the standard library data frame. The standard library can be accessed easily with the data() command:</p>
+<pre class="r"><code>data(&quot;StandardLibrary_030117&quot;)
+str(StandardLibrary_030117, nchar.max=10)</code></pre>
+<pre><code>## 'data.frame':    298 obs. of  14 variables:
+##  $ Name       : chr  &quot;1-Methylg&quot;| __truncated__ &quot;1-Methylh&quot;| __truncated__ &quot;2_Aminobu&quot;| __truncated__ &quot;2_Deoxyga&quot;| __truncated__ ...
+##  $ R.T...s.   : chr  &quot;\&quot;2075 , &quot;| __truncated__ &quot;\&quot;1470 , &quot;| __truncated__ &quot;\&quot;655 , 2&quot;| __truncated__ &quot;\&quot;1460 , &quot;| __truncated__ ...
+##  $ Spectra    : chr  &quot;73:506 29&quot;| __truncated__ &quot;96:1432 7&quot;| __truncated__ &quot;73:556656&quot;| __truncated__ &quot;73:260461&quot;| __truncated__ ...
+##  $ RT1        : num  2075 1470 655 1460 1450 ...
+##  $ RT2        : num  2.59 4.05 2.85 2.67 2.69 2.99 4 3.86 2.88 4 ...
+##  $ FAME_8_RT1 : num  0.9317 0.5556 0.0495 0.5525 0.5463 ...
+##  $ FAME_10_RT1: num  0.761 0.386 -0.121 0.38 0.373 ...
+##  $ FAME_12_RT1: num  0.599 0.228 -0.279 0.222 0.216 ...
+##  $ FAME_14_RT1: num  0.4596 0.0772 -0.4303 0.0741 0.0679 ...
+##  $ FAME_16_RT1: num  0.3106 -0.0648 -0.5728 -0.0679 -0.0741 ...
+##  $ FAME_18_RT1: num  0.174 -0.201 -0.709 -0.204 -0.21 ...
+##  $ FAME_20_RT1: num  0.0714 -0.3025 -0.8111 -0.3086 -0.3117 ...
+##  $ FAME_22_RT1: num  -0.00621 -0.37963 -0.88545 -0.38272 -0.38889 ...
+##  $ FAME_24_RT1: num  -0.0683 -0.4444 -0.9505 -0.4475 -0.4537 ...</code></pre>
+<p>This creates a new variable named “StandardLibrary_030117” in your R environment, which can be used as input for the <em>standardLibrary</em> flag in the <strong>ConsensusAlign</strong> function (section 2.6).</p>
+</div>
 <div id="computing-and-using-retention-time-indexes" class="section level3">
-<h3><span class="header-section-number">2.5.2</span> Computing and using retention time indexes</h3>
+<h3><span class="header-section-number">2.5.3</span> Computing and using retention time indexes</h3>
 The R2DGC package uses a very simple approach to incorporating retention time standards for universal retention time indexing. The maximum amount retention time the user’s retention time standards cover is computed as a total RT length <span class="math inline">\(L\)</span>. Next, the difference between a peaks retention time and each individual retention standard is computed as a vector of differences, <span class="math inline">\(D=[d_1,d_2,...,d_n]\)</span>, where <span class="math inline">\(d\)</span> representes the difference in retention time between the a peak and a given retention time standard and <span class="math inline">\(n\)</span> is the total number of retention time standards used. Next each element in <span class="math inline">\(D\)</span> is divided by <span class="math inline">\(L\)</span> resulting in a retention index vector, <span class="math inline">\(R\)</span>, with each retention time standard voting on the location of a peak relative to total retention time covered by all retention standards: <br><br>
 <center>
 <span class="math inline">\(R=D/L=[r_1,r_2,...,r_n]\)</span>
@@ -618,7 +641,6 @@ Alignment&lt;-ConsensusAlign(c(SampleA,SampleB), standardLibrary = StandardLibra
 <pre><code>## 1 seed</code></pre>
 <pre><code>## Computing pairwise alignments</code></pre>
 <pre><code>## Computing peak similarity threshold</code></pre>
-<pre><code>## [1] 74</code></pre>
 <pre><code>## Searching for missing peaks</code></pre>
 <pre><code>## Matching peaks to standard library</code></pre>
 <p>The output consists of a list of three objects. The first is the alignment matrix. This is a matrix contains all aligned peak areas with the same number of rows as aligned peaks and columns as number of samples.</p>

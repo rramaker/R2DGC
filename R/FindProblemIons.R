@@ -15,6 +15,7 @@
 #'     possibleIons = 70:78)
 #'
 #' @import parallel
+#' @import graphics
 #' @export
 
 FindProblemIons<-function(inputFile, possibleIons=c(70:600), numCores=1, absentIonThreshold=0.01, commonIonThreshold=2, plotData=T){
@@ -77,7 +78,7 @@ FindProblemIons<-function(inputFile, possibleIons=c(70:600), numCores=1, absentI
 
   #Plot commmon ion results
   if(plotData==T){
-    plot(possibleIons[!possibleIons%in%AbsentIons],scale(Sum50), pch=16,cex=0.5, ylab="Sum 50 (Std. Dev.)", xlab="Ion")
+    graphics::plot(possibleIons[!possibleIons%in%AbsentIons],scale(Sum50), pch=16,cex=0.5, ylab="Sum 50 (Std. Dev.)", xlab="Ion")
     if(length(ProblemIons)>0){
       text(ProblemIons,scale(Sum50)[which(scale(Sum50)<(-2))], labels = ProblemIons, pos=3, cex=0.75, col="red")
     }

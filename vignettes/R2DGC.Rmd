@@ -303,6 +303,18 @@ str(StandardLibrary, nchar.max=20)
 
 Notice the output was a data frame with two rows reprenting the two metabolite standards we ran the function on. The first three columns are the original peak name, retention time, and spectra columns from the input files. The following columns represent the two retention times followed by the first retention time relative to each FAME standard to allow for retention time indexing while performing alignments with the **ConsensusAlign** function (see section 2.5.2 below for more details). Though recommended, retention time standards are not required for alignment or standard library construction. If retention time standards are not desired the user should just submit a metabolite standard Chromatof file formatted identically to the examples above except with only one row describing the metabolite standard of interest.
 
+###Finding the pre-formatted standard library that comes with the package
+
+We have provided a pre-formatted standard library with ~300 peaks with rentention indices calculated with 9 FAME standards (C:8, C:10, C:12, C:14, C:16, C:18, C:20, C:22, C:24). We've used the naming convention described above (Section 2.2), FAME_[number of carbons]. Any user can use this library regardless of whether they have FAME standards spiked into their samples if the perform a retention time standard free alignment (see section 2.6 below). Users who have spiked these FAME standards into their samples and named the FAME peaks according to the convention described. If only a subset of the FAME standards have been used, this library can still be used if the columns corresponding to the missing FAME peaks are deleted from the standard library data frame. The standard library can be accessed easily with the data() command:
+
+```{r}
+data("StandardLibrary_030117")
+str(StandardLibrary_030117, nchar.max=10)
+```
+
+This creates a new variable named "StandardLibrary_030117" in your R environment, which can be used as input for the _standardLibrary_ flag in the **ConsensusAlign** function (section 2.6).
+
+
 ###Computing and using retention time indexes
 
 The R2DGC package uses a very simple approach to incorporating retention time standards for universal retention time indexing. The maximum amount retention time the user's retention time standards cover is computed as a total RT length $L$. Next, the difference between a peaks retention time and each individual retention standard is computed as a vector of differences, $D=[d_1,d_2,...,d_n]$, where $d$ representes the difference in retention time between the a peak and a given retention time standard and $n$ is the total number of retention time standards used. Next each element in $D$ is divided by $L$ resulting in a retention index vector, $R$, with each retention time standard voting on the location of a peak relative to total retention time covered by all retention standards:
