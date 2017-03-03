@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "#' This function takes input chromatof files from metabolite standards and parses them into a dataframe of retention time indexed standards that can be used as an input for ConsensusAlign function\n#'\n#' @param inputFileList A character vector of full file paths to the metabolite standard chromatof files to include in library.\n#' @param RT1_Standards A character vector with the name of all first retention time standards to use to index metabolites. Defaults to FAME_8-24.\n#' @param RT2_Standards A character vector with the name of all second retention time standards to use to index metabolites. Defaults to c().\n#' @return Returns a list with a retention standard indexed metabolite library that can be used in the standard library argument of the ConsensusAlign function\n#' @examples\n#' MakeReference(c(system.file(\"extdata\", \"Alanine_150226_1.txt\", package=\"R2DGC\"),\n#'     system.file(\"extdata\", \"Serine_022715_1.txt\", package=\"R2DGC\")))\n#' @export\n\nMakeReference<-function(inputFileList, RT1_Standards=paste0(\"FAME_\", seq(8,24,2)), RT2_Standards=c()){\n\n  #Create empty list to add RT-indexed standards\n  StandardLibList<-list()\n\n  #Create empty list for missing retention indices\n  MissingRTIndices<-list()\n\n  for(File in inputFileList){\n\n    #Read in file\n    currentFile<-read.table(File, sep=\"\\t\", fill=T, quote=\"\",strip.white = T, stringsAsFactors = F, header=T)\n\n    #Parse retention time\n    RTSplit<-data.frame(strsplit(currentFile[,2], \" , \"), stringsAsFactors = F)\n    RTSplit[1,]<-gsub(\"\\\"\", \"\", RTSplit[1,])\n    RTSplit[2,]<-gsub(\"\\\"\", \"\", RTSplit[2,])\n    currentFile[,\"RT1\"]<-as.numeric(t(RTSplit[1,]))\n    currentFile[,\"RT2\"]<-as.numeric(t(RTSplit[2,]))\n\n    #Find RT1 differences from all RT1 standards\n    if(length(RT1_Standards)>0){\n      if(sum(RT1_Standards%in%currentFile[,1])!=length(RT1_Standards)){\n        MissingRTIndices[[File]]<-RT1_Standards[which(!RT1_Standards%in%currentFile[,1])]\n        next\n      }\n      RT1_Length<-max(currentFile[which(currentFile[,1]%in%RT1_Standards),4])-min(currentFile[which(currentFile[,1]%in%RT1_Standards),4])\n      for(Standard in RT1_Standards){\n        currentFile[,paste(Standard,\"RT1\",sep=\"_\")]<-(currentFile[,4]-currentFile[grep(Standard,currentFile[,1],perl = T),4])/RT1_Length\n      }\n    }\n\n    #Find RT2 differences from all RT2 standards\n    if(length(RT2_Standards)>0){\n      if(sum(RT2_Standards%in%currentFile[,1])!=length(RT2_Standards)){\n        MissingRTIndices[[File]]<-c(MissingRTIndices[[File]],RT2_Standards[which(!RT1_Standards%in%currentFile[,1])])\n        next\n      }\n      RT2_Length<-max(currentFile[which(currentFile[,1]%in%RT2_Standards),4])-min(currentFile[which(currentFile[,1]%in%RT2_Standards),4])\n      for(Standard in RT2_Standards){\n        currentFile[,paste(Standard,\"RT2\",sep=\"_\")]<-(currentFile[,4]-currentFile[grep(Standard,currentFile[,1],perl = T),4])/RT2_Length\n      }\n    }\n\n    #Add indexed metabolite only to StandardLibList\n    StandardLibList[[File]]<-currentFile[which(!currentFile[,1]%in%RT1_Standards&!currentFile[,1]%in%RT2_Standards),]\n  }\n\n  #Convert library to dataframe for output\n  if(length(MissingRTIndices)==0){\n    StandardLibrary<-do.call(rbind,StandardLibList)\n    row.names(StandardLibrary)<-1:nrow(StandardLibrary)\n    return(StandardLibrary)\n  }\n  if(length(MissingRTIndices)>0){\n    message(\"Error: Missing RT indices detected. See output list\")\n   return(MissingRTIndices)\n  }\n}\n\n",
+    "created" : 1488080866045.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1170347071",
+    "id" : "6425CC0B",
+    "lastKnownWriteTime" : 1488169156,
+    "last_content_update" : 1488169156721,
+    "path" : "~/Desktop/R2DGC/R/MakeReference.R",
+    "project_path" : "R/MakeReference.R",
+    "properties" : {
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
