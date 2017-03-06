@@ -1,7 +1,7 @@
 Package: R2DGC
 Type: Package
 Title: Multiple peak alignment for untargeted 2D-GCMS metabolomics analysis
-Version: 0.1.0
+Version: 0.1.2
 Author: Ryne Ramaker <ryneramaker@gmail.com>
 Maintainer: Ryne Ramaker <ryneramaker@gmail.com>
 Description: This package aligns 2D-GCMS derived metabolite peaks obtained from Chromatof (Leco) primary processing and generates an alignment table that

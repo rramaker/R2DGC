@@ -4,15 +4,14 @@
 \alias{MakeReference}
 \title{This function takes input chromatof files from metabolite standards and parses them into a dataframe of retention time indexed standards that can be used as an input for ConsensusAlign function}
 \usage{
-MakeReference(inputFileList, RT1_Standards = paste0("FAME_", seq(8, 24, 2)),
-  RT2_Standards = c())
+MakeReference(inputFileList, RT1_Standards = NULL, RT2_Standards = NULL)
 }
 \arguments{
 \item{inputFileList}{A character vector of full file paths to the metabolite standard chromatof files to include in library.}
 
-\item{RT1_Standards}{A character vector with the name of all first retention time standards to use to index metabolites. Defaults to FAME_8-24.}
+\item{RT1_Standards}{A character vector with the name of all first retention time standards to use to index metabolites. Defaults to NULL.}
 
-\item{RT2_Standards}{A character vector with the name of all second retention time standards to use to index metabolites. Defaults to c().}
+\item{RT2_Standards}{A character vector with the name of all second retention time standards to use to index metabolites. Defaults to NULL.}
 }
 \value{
 Returns a list with a retention standard indexed metabolite library that can be used in the standard library argument of the ConsensusAlign function

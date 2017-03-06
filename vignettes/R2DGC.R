@@ -77,6 +77,10 @@ text(0.5, 0, "Figure 2. Basic Workflow. Functions shown in parenthesis",cex=0.8)
 #  install.packages("/PathToDownloadedFile/R2DGC_0.1.0.tgz")
 
 ## ---- eval=FALSE---------------------------------------------------------
+#  library(devtools)
+#  install_github("rramaker/R2DGC")
+
+## ---- eval=FALSE---------------------------------------------------------
 #  install.packages("R2DGC")
 
 ## ------------------------------------------------------------------------
@@ -388,4 +392,15 @@ Alignment$UnmatchedQuantMasses
 #  
 #  #Perform alignment
 #  Alignment<-ConsensusAlign(inputFileList = paste0(c(SampleA,SampleB,SampleC),"_Processed.txt"), RT1_Standards = paste("FAME_", seq(8,24,2)), standardLibrary = StandardLibrary, commonIons = ProblemIons, numCores = 4)
+
+## ---- eval=FALSE---------------------------------------------------------
+#  #Find sample input file paths
+#  SampleA<-system.file("extdata", "SampleA.txt", package="R2DGC")
+#  SampleB<-system.file("extdata", "SampleB.txt", package="R2DGC")
+#  SampleC<-system.file("extdata", "SampleC.txt", package="R2DGC")
+#  
+#  #Perform alignment
+#  Alignment<-ConsensusAlign(inputFileList = c(SampleA,SampleB),
+#                            RT1_Standards = paste("FAME_", seq(8,24,2)),
+#                            numCores = 4, seedFile = c(1,2,3))
 

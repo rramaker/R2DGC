@@ -117,11 +117,20 @@ Paths to raw Chromatof peak files for each sample are provided as input. To impr
 
 ##Installation
 
-There are multiple ways to install this package. The first involves downloading the binary source file from my github page (##Coming Soon!) and installing the package manually:
+There are multiple ways to install this package. The first involves downloading the binary source file from my github page (https://github.com/rramaker/R2DGC) and installing the package manually:
 
 ```{r, eval=FALSE}
 install.packages("/PathToDownloadedFile/R2DGC_0.1.0.tgz")
 ```
+
+
+The package can be directly installed from github with the devtools package
+
+```{r, eval=FALSE}
+library(devtools)
+install_github("rramaker/R2DGC")
+```
+
 
 Alternatively the package can be downloaded from the CRAN repository. ##Coming Soon!
 
@@ -195,7 +204,7 @@ ProblemIons<-FindProblemIons(inputFile=system.file("extdata", "SampleA.txt", pac
 ```
 </center>
 <br><br>
-This function is relatively time intensive so I've limited the search space by setting the number of ions tested by the function by setting _possibleIons_ to 70-78. I happen to know a common derivitization artifact is ion 73, so provides a small but useful range to explore. As shown above on of the outputs of this function (unless plotData=FALSE) is a plot showing each ion on the X-axis and a score for each ion on the Y-axis. We've coined this score "Sum50" or the number of peak spectras within a file that have a dot product similarity score greater than 50 after removing a given ion from each spectra. The dot product similarity score is calculated as follows:
+We have limited the search space by setting the number of ions tested by the function by setting _possibleIons_ to 70-78. I happen to know a common derivitization artifact is ion 73, so this provides a small but useful range to explore. As shown in Figure 3,this function outputs (unless _plotData_=FALSE) generates a plot showing each ion on the X-axis and a score for each ion on the Y-axis. We've coined this score "Sum50" or the number of peak spectras within a file that have a dot product similarity score greater than 50 after removing a given ion from each spectra. The dot product similarity score is calculated as follows:
 
 If we assume $A$ and $B$ are each two peaks with spectra that can be represented as vectors $A = [a_{70},a_{71},..., a_{600}]$ and $B = [b_{70},b_{71},..., b_{600}]$ with each element representing an ion intensity. Than the similarity of two spectras, $S$, can be assessed as the dot product of the two vectors divided by the product of the length of each vector to normalize comparisons of all peaks such that: 
 <br><br>
@@ -212,14 +221,14 @@ This function also outputs a data frame containing information on each ion that 
 head(ProblemIons)
 ```
 
-The first column of this output is the ion and the second is the reason each ion was outputted. By default absent ions are those that represent less than 1% of the total ion intensity in each peak within the sample. This threshold can also be modified with the _absentIonThreshold_ flag. This function defaults to using 1 core for processing, but I recommend increasing this by setting the _numCores_ flag to as cores as available. Increasing the number of cores used exponentially increases processing time. This goes for all functions in the R2DGC package except for the **MakeReference** function, which is less computationally intensive. The number of cores available can be determined using the parallel package's **detectCores** function:
+The first column of this output is the ion and the second is the reason each ion was outputted. By default absent ions are those that represent less than 1% of the total ion intensity in each peak within the sample. This threshold can also be modified with the _absentIonThreshold_ flag. This function defaults to using 1 core for processing, but I recommend increasing this by setting the _numCores_ flag to as many cores as available. Increasing the number of cores used exponentially increases processing time. This goes for all functions in the R2DGC package except for the **MakeReference** function, which is less computationally intensive. The number of cores available can be determined using the parallel package's **detectCores** function:
 
 ```{r}
 library(parallel)
 detectCores()
 ```
 
-##Intra-sample peak compression with PrecompressFiles
+##Intra-sample peak compression with **PrecompressFiles**
 
 ###**PrecompressFiles** overview
 This is another optional function that allows users to input a list of sample peak files and combine peaks that were unnecessarily split by Chromatof processing and likely represent the same analyte. We've found that a small number of peaks in each sample get unnecessarily split due to a variety of reasons including over-saturation in large peaks. This causes problems in downstream alignments because peaks will semi-randomly be assigned to each of the split peaks causing gaps in the final alignment table. This can easily be avoided by scanning each sample file for peaks that should be combined prior to alignment. An example of this command is shown below with a sample file that has had its Alanine peak split:
@@ -249,7 +258,7 @@ From spectra similarity is subtracted absolute value of the retention time diffe
 $S = (((A \bullet B )/ (||A||\times||B||))\times100) - (|A_p - B_p|\times P_1) - (|A_q - B_q|\times P_2)$
 </center>
 <br><br>
-This results in a range possible similarity scores, $S$, from a perfect score of 100 to $-\infty$. The retention time penalties are set with the _RT1Penalty_ and _RT2Penalty_ flags and default to 1 and 10 respectively. The second retention recieves a higher penalty by default because it is typically a shorter column, thus smaller retention time differences are more important. However, the user should adjust these based on the stability of each retention time. In other words, if the second retention time is highly variable, reduce _RT2Penalty_ relative to _RT1Penalty_. The absolute values of _RT1Penalty_ and _RT2Penalty_ will dictate the overall retention time penalty relative to the spectra similarity. We recommend using a relatively stringent spectra similarity threshold (_similarityCutoff_ defaults to 95) as only peaks that near impossibly similar should be combined. A pairwise comparison of all peaks for each sample is made in this step. Problem ions previously identified by the **FindProblemIons** function can be filtered prior to performing pair wise comparisons by setting commonIons flag to the first column of the FindProblemIons output dataframe:
+This results in a range possible similarity scores, $S$, from a perfect score of 100 to $-\infty$. The retention time penalties are set with the _RT1Penalty_ and _RT2Penalty_ flags and default to 1 and 10 respectively. The second retention recieves a higher penalty by default because it is typically a shorter column, thus smaller retention time differences are more important. However, the user should adjust these based on the stability of each retention time. In other words, if the second retention time is highly variable, reduce _RT2Penalty_ relative to _RT1Penalty_. The absolute values of _RT1Penalty_ and _RT2Penalty_ will dictate the overall retention time penalty relative to the spectra similarity. We recommend using a relatively stringent spectra similarity threshold (_similarityCutoff_ defaults to 95) as only peaks that are near impossibly similar should be combined. A pairwise comparison of all peaks for each sample is made in this step. Problem ions previously identified by the **FindProblemIons** function can be filtered prior to performing pair wise comparisons by setting commonIons flag to the first column of the FindProblemIons output dataframe:
 
 ```{r}
 CompressionInfo<-PrecompressFiles(inputFileList=SampleC, commonIons = ProblemIons[,1])
@@ -259,7 +268,7 @@ If the _outputFiles_ flag is set to TRUE, this function will peform a putative s
 
 ###Handeling different quant masses
 
-One important thing to note that if the _quantMethod_ flag should be set to the quant method used in the Chromatof data processing method used to generate the sample files. If TIC or apexing masses are used (quantMethod = "T" or "A") than peak areas that are identified for combining will simply be summed together. However, if the unique mass method is used (quantMethod="U") and peaks identified to be confined have different unique masses proportional conversion will be performed to convert the peak masses relative to what they would be had the same unique mass. In other words, if a peak area, $A$, is computed with a unique mass of 73 and a second peak area $B$, is computed with a unique mass of 74, $B$ is converted to roughly what the mass would have been if its unique mass would have been 73 by multiplying it by the ratio of its ion intensities $b_{73}/b_{74}$. Thus, in this scenario with differing unique masses the final combined peak area, $C$, would be computed as follows:
+One important thing to note is that the _quantMethod_ flag should be set to the quant method used in the Chromatof data processing used to generate the sample files. If TIC or apexing masses are used (quantMethod = "T" or "A") than peaks that are nominated for combining will simply be summed together. However, if the unique mass method is used (quantMethod="U") and peaks nominated have different unique masses, proportional conversion will be performed to convert the peak masses to what they would be if they had the same unique mass. In other words, if a peak area, $A$, is computed with a unique mass of 73 and a second peak area $B$, is computed with a unique mass of 74, $B$ is converted to roughly what the mass would have been if its unique mass would have been 73 by multiplying it by the ratio of its ion intensities $b_{73}/b_{74}$. Thus, in this scenario with differing unique masses the final combined peak area, $C$, would be computed as follows:
 <br><br>
 <center>
 $C=A+(B\times b_{73}/b_{74})$
@@ -301,11 +310,11 @@ Notice, in addition to providing the file paths to the standards I provided a ve
 str(StandardLibrary, nchar.max=20)
 ```
 
-Notice the output was a data frame with two rows reprenting the two metabolite standards we ran the function on. The first three columns are the original peak name, retention time, and spectra columns from the input files. The following columns represent the two retention times followed by the first retention time relative to each FAME standard to allow for retention time indexing while performing alignments with the **ConsensusAlign** function (see section 2.5.2 below for more details). Though recommended, retention time standards are not required for alignment or standard library construction. If retention time standards are not desired the user should just submit a metabolite standard Chromatof file formatted identically to the examples above except with only one row describing the metabolite standard of interest.
+The output is a data frame with two rows representing the two metabolite standards we ran the function on. The first three columns are the original peak name, retention time, and spectra columns from the input files. The following columns represent the two retention times followed by the first retention time relative to each FAME standard to allow for retention time indexing while performing alignments with the **ConsensusAlign** function (see section 2.5.3 below for more details). Though recommended, retention time standards are not required for alignment or standard library construction. If retention time standards are not desired the user should just submit a metabolite standard Chromatof file formatted identically to the examples above except with only one row describing the metabolite standard of interest.
 
 ###Finding the pre-formatted standard library that comes with the package
 
-We have provided a pre-formatted standard library with ~300 peaks with rentention indices calculated with 9 FAME standards (C:8, C:10, C:12, C:14, C:16, C:18, C:20, C:22, C:24). We've used the naming convention described above (Section 2.2), FAME_[number of carbons]. Any user can use this library regardless of whether they have FAME standards spiked into their samples if the perform a retention time standard free alignment (see section 2.6 below). Users who have spiked these FAME standards into their samples and named the FAME peaks according to the convention described. If only a subset of the FAME standards have been used, this library can still be used if the columns corresponding to the missing FAME peaks are deleted from the standard library data frame. The standard library can be accessed easily with the data() command:
+We have provided a pre-formatted standard library with ~300 peaks with rentention indices calculated with 9 FAME standards (C:8, C:10, C:12, C:14, C:16, C:18, C:20, C:22, C:24). We've used the naming convention described above (Section 2.2), FAME_[number of carbons]. Any user can use this library regardless of whether they have FAME standards spiked into their samples if they perform a retention time standard free alignment (see section 2.6 below). Users who have spiked these FAME standards into their samples and named the FAME peaks according to the convention described. If only a subset of the FAME standards have been used, this library can still be used if the columns corresponding to the missing FAME peaks are deleted from the standard library data frame. The standard library can be accessed easily with the data() command:
 
 ```{r}
 data("StandardLibrary_030117")
@@ -317,7 +326,7 @@ This creates a new variable named "StandardLibrary_030117" in your R environment
 
 ###Computing and using retention time indexes
 
-The R2DGC package uses a very simple approach to incorporating retention time standards for universal retention time indexing. The maximum amount retention time the user's retention time standards cover is computed as a total RT length $L$. Next, the difference between a peaks retention time and each individual retention standard is computed as a vector of differences, $D=[d_1,d_2,...,d_n]$, where $d$ representes the difference in retention time between the a peak and a given retention time standard and $n$ is the total number of retention time standards used. Next each element in $D$ is divided by $L$ resulting in a retention index vector, $R$, with each retention time standard voting on the location of a peak relative to total retention time covered by all retention standards:
+The R2DGC package uses a very simple approach to incorporating retention time standards for universal retention time indexing. The maximum amount retention time the user's retention time standards cover is computed as a total RT length $L$. Next, the difference between a peak's retention time and each  retention time standard is computed as a vector of differences, $D=[d_1,d_2,...,d_n]$, where $d$ representes the difference in retention time between a peak and a given retention time standard and $n$ is the total number of retention time standards used. Next each element in $D$ is divided by $L$ resulting in a retention index vector, $R$, with each retention time standard voting on the location of a peak relative to total retention time covered by all retention standards:
 <br><br>
 <center>
 $R=D/L=[r_1,r_2,...,r_n]$
@@ -352,7 +361,7 @@ arrows(x0 = c(.8,.35), y0 = rep(0.19,2),x1 = c(.8,.35),y1 = rep(0.21,2), code=0,
 text(.5,0, labels = "Figure 4. Computing retention index values", cex=0.75)
 ```
 </center>
-Retention index vectors can be compared similarly to standard retention times as described when computing similarity scores in section 2.4.2 above. Namely, taking the absolute values of the difference between two vectors. Thus, retention index vectors $R$ can be relatively easily substituted for retention times. As described in 2.4.2 is two peaks are represented as $A$ and $B$, then instead of having a primary retention time $A_p$ and $B_p$, the peaks can have retention index vectors $A_R$ and $B_R$. The retention difference, $W$, is then computed as the sum of the absolute value difference between each element of the two peaks respective retention indices:
+Retention index vectors can be compared similarly to simple retention times as described in section 2.4.2 above when computing similarity scores. Namely, taking the absolute values of the difference between two vectors. Thus, retention index vectors $R$ can be relatively easily substituted for retention times. As described in 2.4.2, if two peaks are represented as $A$ and $B$, then instead of having a primary retention time $A_p$ and $B_p$, the peaks can have retention index vectors $A_R$ and $B_R$. The retention difference, $W$, is then computed as the sum of the absolute value difference between each element of the two peaks respective retention indices:
 <br><br>
 <center>
 $W=\sum_{i=1}^n |A_R-B_R|$
@@ -364,7 +373,7 @@ Where $n$ represents the total number of retention standards used. Plugging $W$ 
 $S = (((A \bullet B )/ (||A||\times||B||))\times100) - (W\times P_1) - (|A_q - B_q|\times P_2)$
 </center>
 <br><br>
-It may not seem intuitive that $W$ would provide a good universal metric of the difference between two metabolites retention times so I'll provide three brief demonstrations. First lets assume we have three different columns on which retention time standards all run slightly different:
+It may not be intuitive that $W$ would provide a good universal metric of the difference between two metabolites retention times so we have provided three brief demonstrations. First, lets assume we have three different columns on which retention time standards have slightly different retention times:
 
 <center>
 ```{r, echo=FALSE,fig.width=5, fig.height=6}
@@ -509,7 +518,7 @@ plot(seq(0,10,0.1),IndexDifferences, pch=16, xlab="Analyte 2 Retention Time", yl
 ```
 </center>
 <br><br>
-Again $W$'s minima shifts as expected with the slope of the penalty increasing after the second standard due to the non-linear increase in retention time later in the column run. It's worth noting a couple things at this point. The accuracy of this approach increases the as retention time standards are used by providing a finer representation of retention time shifts. Second, the accuracy of this approach breaks down with peaks that occur outside the range of the retention time standards, so be sure use retention time standards that cover range of retention times of the metabolite peaks of interest.
+Again $W$'s minima shifts as expected with the slope of the penalty increasing after the second standard due to the non-linear increase in retention time later in the column run (Figure 8). It's worth noting a couple things at this point. The accuracy of this approach increases with the number of retention time standards used as increasing the number of retention time standards provides a finer representation of retention time shifts. Second, the accuracy of this approach breaks down with peaks that occur outside the range of the retention time standards, so the user should use retention time standards that cover the range of retention times of the metabolite peaks of interest.
 
 ##Multi-sample alignment and metabolite identification with **ConsensusAlign**
 ###**ConsensusAlign** overview
@@ -569,7 +578,7 @@ text(0.5,-0.02, "Figure 9. Overview of ConsensusAlign function.", cex=0.7)
 
 As described above, sample files are read in from file paths provide by the _inputFilePaths_ flag. If retention time standards are specified with the _RT1_Standards_ or _RT2_Standards_ flags, retention indices are computed for each peak in each sample file as described in section 2.5.2 above. Next, pairwise peak similarity scores are computed for each peak in each sample file and a designated seed file. The seed file defaults to the first file in the inputFilePaths argument, however this can be changed with the _seedFile argument_. Similarity scores are computed as described in section 2.4.2 above. Next, the best peak matches (between each sample file and the seed file) that are above a similarity score threshold are added to a final alignment table. The similarity score threshold dictates the stringency of the alignment and can be manually adjusted with the _similarityCutoff_ flag - acceptable values usually range from 0 to 95 with higher values resulting in more missing values, but higher confidence alignments. By setting _autoTuneMatchStringency_ to TRUE, the function will ignore the user inputted _similarityCutoff_ and attempt to compute an optimal similarity score threshold (see section 2.6.2. below). 
 
-Peaks that are present in sample Chromatof files other than the seed file will be added to the alignment table and searched for in other sample files only if they have a similarity score less than that specified by the _dissimilarityCutoff_ flag (defaults 90 less than the _similarityCutoff_) for all other peaks already present in the alignment table. It's important that the _dissimilarityCutoff_ is significantly less than the _similarityCutoff_ so the same peaks aren't split over multiple rows in the alignment table. We've found this is a major source of missing data in other aligners.
+Peaks that are present in sample Chromatof files, but not present in the seed file will be added to the alignment table and searched for in other sample files only if they have a similarity score less than that specified by the _dissimilarityCutoff_ flag (defaults 90 less than the _similarityCutoff_) for all other peaks already present in the alignment table. It's important that the _dissimilarityCutoff_ is significantly less than the _similarityCutoff_ so the same peaks aren't split over multiple rows in the alignment table. We've found this is a major source of missing data in other aligners.
 
 After all alignments are completed the alignment table will be trimmed to only peaks that were successfulled found in a greater or equal fraction of the samples than that specified by the _missingValueLimit_ flag (defaults to 0.75). If the _missingPeakFinderSimilarityLax_ flag is less than 1 (typical range 0.75-1), the function will perform a second pass alignment on the _missingValueLimit_ trimmed alignment table looking for the missing peaks in samples at a relaxed fraction of the initial _similarityCutoff_. We've found that these peaks are usually not truly missing in samples, rather they simply had a similarity score that fell just below the initial _similarityCutoff_ threshold.
 
@@ -577,7 +586,7 @@ Specifying a seed file to which we compare all other sample files greatly reduce
 
 After the alignment(s) are complete, if the user provides a metabolite standard library data frame to the _standardLibrary_ flag as described in section 2.5 above, the function will compute similarity scores between each peak in the final alignment table and each metabolite standard in the library. The top three hits in the library and their respective similarity scores are reported in the peak information table. For peaks not present in the standard library, the similarity scores will be very low (<0) and these matches can probably ignored. From our experience similarity scores greater than 70 warrant attention as a likely hit.
 
-The last thing to note about this function is that it is compatible with all three Chromatof quant methods, so the user should specify the method used for data processing with the _quantMethod_ flag. If the unique mass method is used (quantMethod="U"), any peaks that are aligned, but have different quant masses than the seed file will have their peak area proportionally converted as described in section 2.4.3 above and will be outputted in the incongruent quant mass list. If the apexing mass method is used (quantMethod="A"), if a sample peak has less than 50% apexing masses in common with the seed file and is aligned, the peak and sample will be outputted in the incrongruent quant mass list. These occurences should be rare in peaks that pass similarity score thresholds, however, we recommend examing the incpongruent quant mass list if using the unique mass or apexing mass quant methods, manually changing the quant mass of the peaks, and reprocessing for final analyses.
+The last thing to note about this function is that it is compatible with all three Chromatof quant methods, so the user should specify the method used for data processing with the _quantMethod_ flag. If the unique mass method is used (quantMethod="U"), any peaks that are aligned, but have different quant masses than the seed file will have their peak area proportionally converted as described in section 2.4.3 above and will be outputted in the incongruent quant mass list. If the apexing mass method is used (quantMethod="A"), if a sample peak has less than 50% apexing masses in common with the seed file and is aligned, the peak and sample will be outputted in the incrongruent quant mass list. These occurences should be rare in peaks that pass similarity score thresholds, however, we recommend examing the incongruent quant mass list if using the unique mass or apexing mass quant methods, manually changing the quant mass of the peaks, and reprocessing for final analyses.
 
 Here's a brief example to examine the outputs using the sample input files described in section 2.2, the standard library generated in section 2.5, and filtering problem ions identified in section 2.3 above:
 
@@ -611,7 +620,7 @@ Alignment$UnmatchedQuantMasses
 
 ###Computing the optimal similarity score threshold
 
-As described above the user has the option of manually providing a similarty score threshold for identifying a successful alignment via the _similarityCutoff_ flag of in the **ConsensusAlign** function, however user imposed thresholds are often arbitrary and can be difficult to optomize. Thus, we've provided the option of alllowing the function to find a semi-optomized threshold by setting the _autoTuneMatchStringency_ flag to TRUE. We've emprically developed an approach to do this that tries a range of potential similarity scores thresholds to maximize the number peaks with at least one successful match, but minimize the total number of successful matches for each peak.  More specifically this approach can be defined as:
+As described above, the user has the option of manually providing a similarity score threshold for identifying a successful alignment via the _similarityCutoff_ flag of in the **ConsensusAlign** function, however user imposed thresholds are often arbitrary and can be difficult to optimize. Thus, we've provided the option of allowing the function to find a semi-optimized threshold by setting the _autoTuneMatchStringency_ flag to TRUE. We've emprically developed an approach to do this that tries a range of potential similarity score thresholds to maximize the number peaks with at least one successful match, but minimize the total number of successful matches for each peak.  More specifically this approach can be defined as:
 <br><br>
 <center>
 $\forall i \in [1,2,3,...,100]$, $argmax(Y_i/ \sqrt Z_i)$
@@ -680,6 +689,19 @@ StandardLibrary<-MakeReference(inputFileList = c(Standard1, Standard2), RT1_Stan
 
 #Perform alignment
 Alignment<-ConsensusAlign(inputFileList = paste0(c(SampleA,SampleB,SampleC),"_Processed.txt"), RT1_Standards = paste("FAME_", seq(8,24,2)), standardLibrary = StandardLibrary, commonIons = ProblemIons, numCores = 4)
+```
+
+##Use case #5. Align peaks from multiple samples with retention time standards with multiple seed files
+```{r, eval=FALSE}
+#Find sample input file paths
+SampleA<-system.file("extdata", "SampleA.txt", package="R2DGC")
+SampleB<-system.file("extdata", "SampleB.txt", package="R2DGC")
+SampleC<-system.file("extdata", "SampleC.txt", package="R2DGC")
+
+#Perform alignment
+Alignment<-ConsensusAlign(inputFileList = c(SampleA,SampleB), 
+                          RT1_Standards = paste("FAME_", seq(8,24,2)), 
+                          numCores = 4, seedFile = c(1,2,3))
 ```
 
 

@@ -4,9 +4,9 @@
 \alias{ConsensusAlign}
 \title{Takes a vector of paths to input files and aligns common metabolites into a final table.  Will also identify metabolites if a reference library is provided}
 \usage{
-ConsensusAlign(inputFileList, RT1_Standards = paste("FAME_", seq(8, 24, 2),
-  sep = ""), RT2_Standards = c(), seedFile = 1, RT1Penalty = 1,
-  RT2Penalty = 10, autoTuneMatchStringency = TRUE, similarityCutoff = 90,
+ConsensusAlign(inputFileList, RT1_Standards = NULL, RT2_Standards = NULL,
+  seedFile = 1, RT1Penalty = 1, RT2Penalty = 10,
+  autoTuneMatchStringency = TRUE, similarityCutoff = 90,
   disimilarityCutoff = similarityCutoff - 90, numCores = 1,
   commonIons = c(), missingValueLimit = 0.75,
   missingPeakFinderSimilarityLax = 0.85, quantMethod = "T",
@@ -15,9 +15,9 @@ ConsensusAlign(inputFileList, RT1_Standards = paste("FAME_", seq(8, 24, 2),
 \arguments{
 \item{inputFileList}{Vector of file paths to align}
 
-\item{RT1_Standards}{Vector of standard names used to adjust first retention time. All names must be found in input files. Set to c() to avoid using RT adjustment. Defaults to FAME_8-24.}
+\item{RT1_Standards}{Vector of standard names used to adjust first retention time. All names must be found in input files. Defaults to NULL.}
 
-\item{RT2_Standards}{Vector of standard names used to adjust second retention time. All names must be found in input files. Set to c() to avoid using RT adjustment. Defaults to empty vector.}
+\item{RT2_Standards}{Vector of standard names used to adjust second retention time. All names must be found in input files. Defaults to NULL.}
 
 \item{seedFile}{File number in inputFileList to initialize alignment. Can also input a vector of different seed files (3 is usually sufficient) to prevent bias from seed file.  Defaults to 1.}
 

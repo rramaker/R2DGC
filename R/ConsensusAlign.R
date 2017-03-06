@@ -1,8 +1,8 @@
 #' Takes a vector of paths to input files and aligns common metabolites into a final table.  Will also identify metabolites if a reference library is provided
 
 #' @param inputFileList Vector of file paths to align
-#' @param RT1_Standards Vector of standard names used to adjust first retention time. All names must be found in input files. Set to c() to avoid using RT adjustment. Defaults to FAME_8-24.
-#' @param RT2_Standards Vector of standard names used to adjust second retention time. All names must be found in input files. Set to c() to avoid using RT adjustment. Defaults to empty vector.
+#' @param RT1_Standards Vector of standard names used to adjust first retention time. All names must be found in input files. Defaults to NULL.
+#' @param RT2_Standards Vector of standard names used to adjust second retention time. All names must be found in input files. Defaults to NULL.
 #' @param seedFile File number in inputFileList to initialize alignment. Can also input a vector of different seed files (3 is usually sufficient) to prevent bias from seed file.  Defaults to 1.
 #' @param RT1Penalty Penalty used for first retention time errors.  Defaults to 1.
 #' @param RT2Penalty Penalty used for first retention time errors.  Defaults to 10.
@@ -25,8 +25,8 @@
 #'     system.file("extdata", "SampleB.txt", package="R2DGC")), RT1_Standards= c())
 
 ConsensusAlign<-function(inputFileList,
-                         RT1_Standards=paste("FAME_", seq(8,24,2), sep=""),
-                         RT2_Standards=c(),
+                         RT1_Standards=NULL,
+                         RT2_Standards=NULL,
                          seedFile=1, #Change to 5 for test case reproducibility
                          RT1Penalty=1,
                          RT2Penalty=10, #1 for relatively unstable spectras
@@ -57,7 +57,7 @@ ConsensusAlign<-function(inputFileList,
     seedRawFile[,"RT2"]<-as.numeric(t(RTSplit[2,]))
 
     #Index metabolites by RT1 Standards
-    if(length(RT1_Standards)>0){
+    if(!is.null(RT1_Standards)){
 
       #Check if all RT1 standards are present in each file
       if(sum(RT1_Standards%in%seedRawFile[,1])!=length(RT1_Standards)){
@@ -73,7 +73,7 @@ ConsensusAlign<-function(inputFileList,
     }
 
     #Index metabolites by RT2 Standards
-    if(length(RT2_Standards)>0){
+    if(!is.null(RT2_Standards)){
 
       #Check if all RT2_Standards are present
       if(sum(RT2_Standards%in%seedRawFile[,1])!=length(RT2_Standards)){
@@ -130,7 +130,7 @@ ConsensusAlign<-function(inputFileList,
       currentRawFile[,"RT2"]<-as.numeric(t(RTSplit[2,]))
 
       #Index metabolites by RT1 standards
-      if(length(RT1_Standards)>0){
+      if(!is.null(RT1_Standards)){
         #Check if all RT1 standards are present
         if(sum(RT1_Standards%in%currentRawFile[,1])!=length(RT1_Standards)){
           MissingRTIndices[[File]]<-RT1_Standards[which(!RT1_Standards%in%currentRawFile[,1])]
@@ -144,7 +144,7 @@ ConsensusAlign<-function(inputFileList,
       }
 
       #Index metabolites by RT2 standards
-      if(length(RT2_Standards)>0){
+      if(!is.null(RT2_Standards)){
         #Check if all RT2 standards are present
         if(sum(RT2_Standards%in%currentRawFile[,1])!=length(RT2_Standards)){
           MissingRTIndices[[File]]<-RT2_Standards[which(!RT2_Standards%in%currentRawFile[,1])]
@@ -175,7 +175,7 @@ ConsensusAlign<-function(inputFileList,
       RT2Index<-matrix(unlist(lapply(currentRawFile[,7],function(x) abs(x-seedRawFile[,7])*RT2Penalty)),nrow=nrow(seedRawFile))
 
       #Use RT indices to calculate RT penalties if necessary
-      if(length(RT1_Standards)>0){
+      if(!is.null(RT1_Standards)){
         #Compute list of metabolite to RT1 standard differences between current file and seed file for each metabolite
         RT1Index<-list()
         for(Standard in RT1_Standards){
@@ -184,7 +184,7 @@ ConsensusAlign<-function(inputFileList,
         #Sum all relative standard differences into a final score
         RT1Index<-Reduce("+",RT1Index)
       }
-      if(length(RT2_Standards)>0){
+      if(!is.null(RT2_Standards)){
         #Compute list of metabolite to RT2 standard differences between current file and seed file for each metabolite
         RT2Index<-list()
         for(Standard in RT2_Standards){
@@ -312,7 +312,7 @@ ConsensusAlign<-function(inputFileList,
       if(length(MissingPeaks)>0){
 
         #Calculate RT1 standard indices
-        if(length(RT1_Standards)>0){
+        if(!is.null(RT1_Standards)){
           RT1_Length<-max(currentRawFile[which(currentRawFile[,1]%in%RT1_Standards),6])-min(currentRawFile[which(currentRawFile[,1]%in%RT1_Standards),6])
           for(Standard in RT1_Standards){
             currentRawFile[,paste(Standard,"RT1",sep="_")]<-(currentRawFile[,6]-currentRawFile[grep(Standard,currentRawFile[,1],perl = T),6])/RT1_Length
@@ -320,7 +320,7 @@ ConsensusAlign<-function(inputFileList,
         }
 
         #Calculate RT2 standard indices
-        if(length(RT2_Standards)>0){
+        if(!is.null(RT2_Standards)){
           RT2_Length<-max(seedRawFile[which(seedRawFile[,1]%in%RT2_Standards),6])-min(seedRawFile[which(seedRawFile[,1]%in%RT2_Standards),6])
           for(Standard in RT2_Standards){
             seedRawFile[,paste(Standard,"RT2",sep="_")]<-(seedRawFile[,6]-seedRawFile[grep(Standard,seedRawFile[,1],perl = T),6])/RT2_Length
@@ -345,14 +345,14 @@ ConsensusAlign<-function(inputFileList,
         RT2Index<-matrix(unlist(lapply(currentRawFile[,7],function(x) abs(x-seedRawFile[MissingPeaks,7])*RT2Penalty)),nrow=nrow(seedRawFile[MissingPeaks,]))
 
         #Use RT indices to calculate RT differences
-        if(length(RT1_Standards)>0){
+        if(!is.null(RT1_Standards)){
           RT1Index<-list()
           for(Standard in RT1_Standards){
             RT1Index[[Standard]]<-matrix(unlist(lapply(currentRawFile[,paste(Standard,"RT1",sep="_")],function(x) abs(x-seedRawFile[MissingPeaks,paste(Standard,"RT1",sep="_")])*(RT1Penalty/length(RT1_Standards)))),nrow=nrow(seedRawFile[MissingPeaks,]))*RT1_Length
           }
           RT1Index<-Reduce("+",RT1Index)
         }
-        if(length(RT2_Standards)>0){
+        if(!is.null(RT2_Standards)){
           RT2Index<-list()
           for(Standard in RT2_Standards){
             RT2Index[[Standard]]<-matrix(unlist(lapply(currentRawFile[,paste(Standard,"RT2",sep="_")],function(x) abs(x-seedRawFile[,paste(Standard,"RT2",sep="_")])*(RT2Penalty/length(RT2_Standards)))),nrow=nrow(seedRawFile))*RT2_Length
@@ -489,14 +489,14 @@ ConsensusAlign<-function(inputFileList,
     RT2Index<-matrix(unlist(lapply(seedRawFile[,7],function(x) abs(x-standardLibrary[,5])*RT2Penalty)),nrow=nrow(standardLibrary))
 
     #Use RT indexes to compute RT differences
-    if(length(RT1_Standards)>0){
+    if(!is.null(RT1_Standards)){
       RT1Index<-list()
       for(Standard in RT1_Standards){
         RT1Index[[Standard]]<-matrix(unlist(lapply(seedRawFile[,paste(Standard,"RT1",sep="_")],function(x) abs(x-standardLibrary[,paste(Standard,"RT1",sep="_")])*(RT1Penalty/length(RT1_Standards)))),nrow=nrow(standardLibrary))*RT1_Length
       }
       RT1Index<-Reduce("+",RT1Index)
     }
-    if(length(RT2_Standards)>0){
+    if(!is.null(RT2_Standards)){
       RT2Index<-list()
       for(Standard in RT2_Standards){
         RT2Index[[Standard]]<-matrix(unlist(lapply(currentRawFile[,paste(Standard,"RT2",sep="_")],function(x) abs(x-seedRawFile[,paste(Standard,"RT2",sep="_")])*(RT2Penalty/length(RT2_Standards)))),nrow=nrow(seedRawFile))*RT2_Length
