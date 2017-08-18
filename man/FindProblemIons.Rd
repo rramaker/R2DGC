@@ -30,6 +30,6 @@ Can use as input to the consensus align function to avoid including these ions d
 }
 \examples{
 FindProblemIons(inputFile=system.file("extdata", "SampleA.txt", package="R2DGC"),
-    possibleIons = 70:78)
+    possibleIons = 70:78,plotData=FALSE)
 
 }

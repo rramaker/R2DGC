@@ -12,7 +12,7 @@
 #' @return Two column data frame identifying filtered ions and the reason they were filtered (absent or common). If plotData is TRUE, plots common ion scores. Y-axis is the z-scored number of pairwise metabolite comparisons with a similarity score greater than 50. X-axis is the ion with the filtered ions labeled in red.
 #' @examples
 #' FindProblemIons(inputFile=system.file("extdata", "SampleA.txt", package="R2DGC"),
-#'     possibleIons = 70:78)
+#'     possibleIons = 70:78,plotData=FALSE)
 #'
 #' @import parallel
 #' @import graphics
@@ -25,8 +25,8 @@ FindProblemIons<-function(inputFile, possibleIons=c(70:600), numCores=1, absentI
 
   #Read in and format input file
   currentRawFile<-read.table(inputFile, header=T, sep="\t", fill=T, quote="",strip.white = T, stringsAsFactors = F)
-  currentRawFile[,4]<-as.character(currentRawFile[,4])
-  currentRawFile<-currentRawFile[which(!is.na(currentRawFile[,3])&nchar(currentRawFile[,4])!=0),]
+  currentRawFile[,5]<-as.character(currentRawFile[,5])
+  currentRawFile<-currentRawFile[which(!is.na(currentRawFile[,3])&nchar(currentRawFile[,5])!=0),]
   currentRawFile[,2]<-as.character(currentRawFile[,2])
 
   #Parse retention times
@@ -43,36 +43,35 @@ FindProblemIons<-function(inputFile, possibleIons=c(70:600), numCores=1, absentI
 
   #Parse ion spectra column into list of numeric vectors
   currentRawFileSplit<-split(currentRawFile,1:nrow(currentRawFile))
-  spectraSplit<-lapply(currentRawFileSplit, function(a) strsplit(a[[4]]," "))
+  spectraSplit<-lapply(currentRawFileSplit, function(a) strsplit(a[[5]]," "))
   spectraSplit<-lapply(spectraSplit, function(b) lapply(b, function(c) strsplit(c,":")))
   spectraSplit<-lapply(spectraSplit, function(d) t(matrix(unlist(d),nrow=2)))
-  spectraSplit<-lapply(spectraSplit, function(d) d[order(d[,1]),])
   spectraSplit<-lapply(spectraSplit, function(d) apply(d,2,as.numeric))
+  spectraSplit<-lapply(spectraSplit, function(d) d[order(d[,1]),2,drop=F])
 
   #Identify absent ions
   spectraFrame<-do.call(cbind,spectraSplit)
-  spectraFrame<-spectraFrame[,-c(seq(1,ncol(spectraFrame),2))]
   spectraSums<-colSums(spectraFrame)
   ionProportions<-apply(spectraFrame,1,function(x) sum((x/spectraSums)>absentIonThreshold))
-  AbsentIons<-spectraSplit[[1]][,1][which(ionProportions==0)]
+  AbsentIons<-possibleIons[which(ionProportions==0)]
 
   #Calculate pairwise retention time comparisons
   RT1Index<-matrix(unlist(lapply(currentRawFile[,"RT1"],function(x) abs(x-currentRawFile[,"RT1"]))),nrow=length(spectraSplit))
   RT2Index<-matrix(unlist(lapply(currentRawFile[,"RT2"],function(x) abs(x-currentRawFile[,"RT2"])*100)),nrow=length(spectraSplit))
 
   #Calculate change global metabolite spectral similarity after dropping each ion not previously identified as an absent ion
-  for(Ion in possibleIons[!possibleIons%in%AbsentIons]){
+  CalcSum50<-function(Ion,AbsentIons,possibleIons,spectraSplit){
     CommonIons<-c(Ion,AbsentIons)
-    spectraSplitMask<-lapply(spectraSplit, function(d) d[which(!d[,1]%in%CommonIons),])
-    spectraSplitMask<-lapply(spectraSplitMask, function(d) d[order(d[,1]),])
-    spectraSplitMask<-lapply(spectraSplitMask, function(d) apply(d,2,as.numeric))
-    SimilarityScores<- parallel::mclapply(spectraSplitMask, function(e) lapply(spectraSplitMask, function(d) ((e[,2]%*%d[,2])/(sqrt(sum(e[,2]*e[,2]))*sqrt(sum(d[,2]*d[,2]))))*100), mc.cores=numCores)
-    SimilarityMatrix<-matrix(unlist(SimilarityScores), nrow=length(spectraSplit))
+    spectraSplitMask<-lapply(spectraSplit, function(d) d[which(!possibleIons%in%CommonIons),,drop=F])
+    spectraFrame<-do.call(cbind,spectraSplitMask)
+    spectraFrame<-t(spectraFrame)
+    spectraFrame<-as.matrix(spectraFrame)/sqrt(apply((as.matrix(spectraFrame))^2,1,sum))
+    SimilarityMatrix<-(spectraFrame %*% t(spectraFrame))*100
     SimilarityMatrix<-SimilarityMatrix-RT1Index-RT2Index
     SimilarityMatrix[lower.tri(SimilarityMatrix, diag = T)]<-0
-    Sum50[Ion]<-sum(rowSums(SimilarityMatrix>50))
+    return(sum(rowSums(SimilarityMatrix>50)))
   }
-  Sum50<-Sum50[which(!is.na(Sum50))]
+  Sum50<-unlist(mclapply(possibleIons[!possibleIons%in%AbsentIons], function(x) CalcSum50(x, AbsentIons, possibleIons,spectraSplit), mc.cores = numCores))
   names(Sum50)<-possibleIons[!possibleIons%in%AbsentIons]
   ProblemIons<-possibleIons[!possibleIons%in%AbsentIons][which(scale(Sum50)<(-1*commonIonThreshold))]
 
