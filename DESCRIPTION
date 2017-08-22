@@ -1,11 +1,11 @@
 Package: R2DGC
 Type: Package
 Title: Multiple Peak Alignment for 2D Gas Chromatography Mass Spectrometry Metabolomics Analysis
-Version: 1.0.0
-Author: Ryne Ramaker <ryneramaker@gmail.com>
+Version: 1.0.3
+Author: Ryne Ramaker <ryneramaker@gmail.com> Emily Gordon <egordon@hudsonalpha.org> Sara Cooper <sjcooper@hudsonalpha.org>
 Maintainer: Ryne Ramaker <ryneramaker@gmail.com>
 Description: Provides functions for aligning 2D gas chromatography mass spectrometry derived metabolite peaks obtained from primary processing and generates an alignment table that
-        allows for a comparison of common peaks across samples and metabolite identification.
+        allows for a comparison of common peaks across samples and metabolite identification. Publication describing the package in detail is available at the following citation: Ryne C. Ramaker, Emily Gordon, Sara J. Cooper (2017) <doi:10.1101/179168>.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

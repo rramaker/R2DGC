@@ -118,7 +118,7 @@ Paths to raw Chromatof peak lists for each sample are provided as input. To impr
 There are multiple ways to install this package. The package can be installed after downloading the binary source file from github (https://github.com/rramaker/R2DGC) and installing the package manually:
 
 ```{r, eval=FALSE}
-install.packages("/PathToDownloadedFile/R2DGC_0.1.0.tgz")
+install.packages("/PathToDownloadedFile/R2DGC_1.0.1.tgz")
 ```
 
 

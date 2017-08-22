@@ -72,7 +72,7 @@ rect(0.7,0.05,1,0.2, col="lightgoldenrod")
 text(0.85,0.13,"Incongruent Quant\nMass List", cex=0.8)
 
 ## ---- eval=FALSE---------------------------------------------------------
-#  install.packages("/PathToDownloadedFile/R2DGC_0.1.0.tgz")
+#  install.packages("/PathToDownloadedFile/R2DGC_1.0.1.tgz")
 
 ## ---- eval=FALSE---------------------------------------------------------
 #  library(devtools)
